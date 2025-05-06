@@ -1,0 +1,154 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Numerics;
+using MessagePack;
+using MessagePackSerializationDemo;
+
+namespace ConsoleApp1
+{
+    public class MainProgram
+    {
+        public static void Main(string[] args)
+        {
+            // Limitations
+            //Non -public types: These are not serialized by default unless explicitly configured.
+            //Cyclic references: If the type contains cyclic references, MessagePack cannot serialize it directly(this is more relevant for classes than structs).
+            //Complex fields in structs: If a struct contains a field with a non-supported type, you may encounter issues.
+
+            //[MessagePackObject]
+            //public struct MyStruct
+            //{
+            //    [Key(0)]
+            //    public int Id { get; set; }
+
+            //    [Key(1)]
+            //    public string Name { get; set; }
+            //}
+
+
+            //public enum MyEnum
+            //{
+            //    Unknown = 0,
+            //    Active = 1,
+            //    Inactive = 2
+            //}
+
+            //Approach 1: Multi - framework compatible models are slightly slower due to additional metadata.
+            //Approach 2: Clean models with only MessagePack annotations are the fastest.
+            //Approach 3: Contractless resolver is the slowest due to dynamic resolution overhead.
+
+            Console.WriteLine("Starting MessagePack Serialization and Deserialization Analytics...\n");
+
+            // Collecting results in a list for tabular display
+            var results = new List<SerializationResult>();
+
+            // Approach 1: Using MessagePack annotations with existing annotations
+            Console.WriteLine("Executing Approach 1... Kept both existing attributes and messagepack attributes");
+            var result1 = Approach1.RunApproach1();
+            results.Add(new SerializationResult("Approach 1 (MP + Existing Annotations)", result1.SerializationTime, result1.DeserializationTime));
+
+            // Approach 2: Using MessagePack annotations after removing conflicting annotations
+            Console.WriteLine("\nExecuting Approach 2...   Only message pack attributes .. optimized and fastest");
+            var result2 = Approach2.RunApproach2();
+            results.Add(new SerializationResult("Approach 2 (Optimized MessagePack)", result2.SerializationTime, result2.DeserializationTime));
+
+            // Approach 3: Using Contractless Resolver without changing existing annotations
+            Console.WriteLine("\nExecuting Approach 3... No specific messagepack attributes and existing attribute present");
+            var result3 = Approach3.RunApproach3();
+            results.Add(new SerializationResult("Approach 3 (No MessagePack annotation)", result3.SerializationTime, result3.DeserializationTime));
+
+            // Approach 4: Using Binary Formatter
+            Console.WriteLine("\nExecuting Approach 4... using binary formatter");
+            var result4 = Approach4.RunApproach4();
+            results.Add(new SerializationResult("Approach 4 (Binary Formatter)", result4.SerializationTime, result4.DeserializationTime));
+
+            // Approach 5: Using System.Text.Json serializer
+            Console.WriteLine("\nExecuting Approach 5... using System.Text.Json serializer");
+            var result5 = Approach5.RunApproach5();
+            results.Add(new SerializationResult("Approach 5 (System.Text.Json)", result5.SerializationTime, result5.DeserializationTime));
+
+            // Approach 6: Using DataContract serializer
+            Console.WriteLine("\nExecuting Approach 6... using DataContract serializer");
+            var result6 = Approach6.RunApproach6();
+            results.Add(new SerializationResult("Approach 6 (DataContract)", result6.SerializationTime, result6.DeserializationTime));
+
+            // Approach 7: Using Newtonsoft.Json serializer
+            Console.WriteLine("\nExecuting Approach 7... Newtonsoft.Json serializer");
+            var result7 = Approach7.RunApproach7();
+            results.Add(new SerializationResult("Approach 7 (Newtonsoft.Json)", result7.SerializationTime, result7.DeserializationTime));
+
+            // Approach 8: Using Newtonsoft.Json serializer
+            Console.WriteLine("\nexecuting approach 8... ceras serializer");
+            var result8 = Approach8.RunApproach8();
+            results.Add(new SerializationResult("approach 8 (ceras)", result8.SerializationTime, result8.DeserializationTime));
+
+            // Display the results in a table format
+            PrintResultsTable(results);
+
+            Console.WriteLine("\nAnalytics Complete!");
+        }
+
+        private static void PrintResultsTable(List<SerializationResult> results)
+        {
+            // Find the fastest and slowest serialization and deserialization times
+            var fastestSerialization = results[0];
+            var slowestSerialization = results[0];
+            var fastestDeserialization = results[0];
+            var slowestDeserialization = results[0];
+
+            foreach (var result in results)
+            {
+                if (result.SerializationTime < fastestSerialization.SerializationTime)
+                    fastestSerialization = result;
+
+                if (result.SerializationTime > slowestSerialization.SerializationTime)
+                    slowestSerialization = result;
+
+                if (result.DeserializationTime < fastestDeserialization.DeserializationTime)
+                    fastestDeserialization = result;
+
+                if (result.DeserializationTime > slowestDeserialization.DeserializationTime)
+                    slowestDeserialization = result;
+            }
+
+            // Print the table header
+            Console.WriteLine("\n| Approach                              | Serialization Time (ms) | Deserialization Time (ms) |");
+            Console.WriteLine("|---------------------------------------|--------------------------|---------------------------|");
+
+            // Print each result row
+            foreach (var result in results)
+            {
+                var serializationHighlight = result == fastestSerialization ? "(Fastest)" :
+                                              result == slowestSerialization ? "(Slowest)" : "";
+
+                var deserializationHighlight = result == fastestDeserialization ? "(Fastest)" :
+                                                result == slowestDeserialization ? "(Slowest)" : "";
+
+                Console.WriteLine($"| {result.Approach,-37} | {result.SerializationTime,24} {serializationHighlight,-10} | {result.DeserializationTime,25} {deserializationHighlight,-10} |");
+            }
+        }
+
+    }
+
+
+    public class SerializationResult
+    {
+        public string Approach { get; set; }
+        public long SerializationTime { get; set; }
+        public long DeserializationTime { get; set; }
+
+        public SerializationResult(string approach, long serializationTime, long deserializationTime)
+        {
+            Approach = approach;
+            SerializationTime = serializationTime;
+            DeserializationTime = deserializationTime;
+        }
+
+        public SerializationResult(long serializationTime, long deserializationTime)
+        {
+            SerializationTime = serializationTime;
+            DeserializationTime = deserializationTime;
+        }
+    }
+
+}
