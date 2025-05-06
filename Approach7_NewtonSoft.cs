@@ -14,8 +14,11 @@ namespace MessagePackSerializationDemo
 {
     public class Approach7
     {
-        public static SerializationResult RunApproach7()
+        public static SerializationResult RunApproach7(int threadCount)
         {
+            string sourceDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            string filePath = Path.Combine(sourceDirectory,  $"approach7_{threadCount}.txt");
+
             // Create sample data
             var user = new CleanUser7
             {
@@ -76,26 +79,41 @@ namespace MessagePackSerializationDemo
                 Username = "mainhundon"
             });
 
-            // Measure serialization and deserialization time
-            Stopwatch sw = new Stopwatch();
+            // Serialization to file
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            var jsonString = Newtonsoft.Json.JsonConvert.SerializeObject(user);
+            File.WriteAllText(filePath, jsonString);
+            stopwatch.Stop();
+            long serializationTime = stopwatch.ElapsedMilliseconds;
 
-            sw.Start();
-            var serializedData = JsonConvert.SerializeObject(user);
-            sw.Stop();
-            long serializationTime = sw.ElapsedMilliseconds;
+            // Deserialization from file
+            stopwatch.Restart();
+            jsonString = File.ReadAllText(filePath);
+            var deserializedUser = Newtonsoft.Json.JsonConvert.DeserializeObject<CleanUser7>(jsonString);
+            stopwatch.Stop();
+            long deserializationTime = stopwatch.ElapsedMilliseconds;
 
-            sw.Restart();
-            var deserializedObject = JsonConvert.DeserializeObject<CleanUser6>(serializedData);
-            sw.Stop();
-            long deserializationTime = sw.ElapsedMilliseconds;
+            //// Measure serialization and deserialization time
+            //Stopwatch sw = new Stopwatch();
 
-            // Output analytics
+            //sw.Start();
+            //var serializedData = JsonConvert.SerializeObject(user);
+            //sw.Stop();
+            //long serializationTime = sw.ElapsedMilliseconds;
+
+            //sw.Restart();
+            //var deserializedObject = JsonConvert.DeserializeObject<CleanUser6>(serializedData);
+            //sw.Stop();
+            //long deserializationTime = sw.ElapsedMilliseconds;
+
+            //// Output analytics
+            Console.WriteLine($"Deserialized User Name: {deserializedUser.Name}");
             Console.WriteLine($"Serialization Time: {serializationTime} ms");
             Console.WriteLine($"Deserialization Time: {deserializationTime} ms");
-            Console.WriteLine($"Deserialized User Name: {deserializedObject.Name}");
 
-            SerializationResult result = new SerializationResult(serializationTime, deserializationTime);
-            return result;
+            //SerializationResult result = new SerializationResult(serializationTime, deserializationTime);
+            //return result;
+            return new SerializationResult(serializationTime, deserializationTime);
         }
     }
 

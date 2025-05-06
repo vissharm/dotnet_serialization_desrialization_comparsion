@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Runtime.ConstrainedExecution;
 using Ceras;
 using ConsoleApp1;
@@ -10,8 +11,11 @@ namespace MessagePackSerializationDemo
 {
     public class Approach8
     {
-        public static SerializationResult RunApproach8()
+        public static SerializationResult RunApproach8(int threadCount)
         {
+            string sourceDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            string filePath = Path.Combine(sourceDirectory,  $"approach8_{threadCount}.txt");
+
             // Create sample data
             var user = new CleanUser8
             {
@@ -72,27 +76,43 @@ namespace MessagePackSerializationDemo
                 Username = "mainhundon"
             });
 
-            // Measure serialization and deserialization time
-            Stopwatch sw = new Stopwatch();
-            sw.Start();
+            // Serialization to file
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            var ceras = new Ceras.CerasSerializer();
+            var serializedData = ceras.Serialize(user);
+            File.WriteAllBytes(filePath, serializedData);
+            stopwatch.Stop();
+            long serializationTime = stopwatch.ElapsedMilliseconds;
 
-            var ceras = new CerasSerializer();
-            var data = ceras.Serialize(user);
-            sw.Stop();
-            long serializationTime = sw.ElapsedMilliseconds;
+            // Deserialization from file
+            stopwatch.Restart();
+            var serializedBytes = File.ReadAllBytes(filePath);
+            var deserializedUser = ceras.Deserialize<CleanUser8>(serializedBytes);
+            stopwatch.Stop();
+            long deserializationTime = stopwatch.ElapsedMilliseconds;
 
-            sw.Restart();
-            var deserializedUser = ceras.Deserialize<CleanUser8>(data);
-            sw.Stop();
-            long deserializationTime = sw.ElapsedMilliseconds;
+            //// Measure serialization and deserialization time
+            //Stopwatch sw = new Stopwatch();
+            //sw.Start();
 
-            // Output analytics
+            //var ceras = new CerasSerializer();
+            //var data = ceras.Serialize(user);
+            //sw.Stop();
+            //long serializationTime = sw.ElapsedMilliseconds;
+
+            //sw.Restart();
+            //var deserializedUser = ceras.Deserialize<CleanUser8>(data);
+            //sw.Stop();
+            //long deserializationTime = sw.ElapsedMilliseconds;
+
+            //// Output analytics
+            Console.WriteLine($"Deserialized User Name: {deserializedUser.Name}");
             Console.WriteLine($"Serialization Time: {serializationTime} ms");
             Console.WriteLine($"Deserialization Time: {deserializationTime} ms");
-            Console.WriteLine($"Deserialized User Name: {deserializedUser.Name}");
 
-            SerializationResult result = new SerializationResult(serializationTime, deserializationTime);
-            return result;
+            //SerializationResult result = new SerializationResult(serializationTime, deserializationTime);
+            //return result;
+            return new SerializationResult(serializationTime, deserializationTime);
         }
     }
 

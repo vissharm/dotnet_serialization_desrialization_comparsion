@@ -13,8 +13,11 @@ namespace MessagePackSerializationDemo
 {
     public class Approach6
     {
-        public static SerializationResult RunApproach6()
+        public static SerializationResult RunApproach6(int threadCount)
         {
+            string sourceDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            string filePath = Path.Combine(sourceDirectory,  $"approach6_{threadCount}.txt");
+
             // Create sample data
             var user = new CleanUser6
             {
@@ -75,29 +78,50 @@ namespace MessagePackSerializationDemo
                 Username = "mainhundon"
             });
 
-            // Measure serialization and deserialization time
-            Stopwatch sw = new Stopwatch();
+            // Serialization to file
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            using (var file = File.Create(filePath))
+            {
+                var serializer = new DataContractSerializer(typeof(CleanUser6));
+                serializer.WriteObject(file, user);
+            }
+            stopwatch.Stop();
+            long serializationTime = stopwatch.ElapsedMilliseconds;
 
-            sw.Start();
-            var memoryStream = new MemoryStream();
-            var dataContractSerializer = new DataContractSerializer(typeof(CleanUser6));
-            dataContractSerializer.WriteObject(memoryStream, user);
-            sw.Stop();
-            long serializationTime = sw.ElapsedMilliseconds;
+            // Deserialization from file
+            stopwatch.Restart();
+            using (var file = File.OpenRead(filePath))
+            {
+                var serializer = new DataContractSerializer(typeof(CleanUser6));
+                var deserializedUser = (CleanUser6)serializer.ReadObject(file);
+                Console.WriteLine($"Deserialized User Name: {deserializedUser.Name}");
+            }
+            stopwatch.Stop();
+            long deserializationTime = stopwatch.ElapsedMilliseconds;
 
-            sw.Restart();
-            memoryStream.Seek(0, SeekOrigin.Begin);
-            var deserializedObject = (CleanUser6)dataContractSerializer.ReadObject(memoryStream);
-            sw.Stop();
-            long deserializationTime = sw.ElapsedMilliseconds;
+            //// Measure serialization and deserialization time
+            //Stopwatch sw = new Stopwatch();
 
-            // Output analytics
+            //sw.Start();
+            //var memoryStream = new MemoryStream();
+            //var dataContractSerializer = new DataContractSerializer(typeof(CleanUser6));
+            //dataContractSerializer.WriteObject(memoryStream, user);
+            //sw.Stop();
+            //long serializationTime = sw.ElapsedMilliseconds;
+
+            //sw.Restart();
+            //memoryStream.Seek(0, SeekOrigin.Begin);
+            //var deserializedObject = (CleanUser6)dataContractSerializer.ReadObject(memoryStream);
+            //sw.Stop();
+            //long deserializationTime = sw.ElapsedMilliseconds;
+
+            //// Output analytics
             Console.WriteLine($"Serialization Time: {serializationTime} ms");
             Console.WriteLine($"Deserialization Time: {deserializationTime} ms");
-            Console.WriteLine($"Deserialized User Name: {deserializedObject.Name}");
 
-            SerializationResult result = new SerializationResult(serializationTime, deserializationTime);
-            return result;
+            //SerializationResult result = new SerializationResult(serializationTime, deserializationTime);
+            //return result;
+            return new SerializationResult(serializationTime, deserializationTime);
         }
     }
 

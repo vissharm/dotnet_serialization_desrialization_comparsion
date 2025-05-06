@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Runtime.Serialization;
 using ConsoleApp1;
 using MessagePack;
@@ -11,8 +12,11 @@ namespace MessagePackSerializationDemo
 {
     public class Approach3
     {
-        public static SerializationResult RunApproach3()
+        public static SerializationResult RunApproach3(int threadCount)
         {
+            string sourceDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            string filePath = Path.Combine(sourceDirectory,  $"approach3_{threadCount}.txt");
+
             // Create sample data
             var user = new CleanUser3
             {
@@ -73,26 +77,45 @@ namespace MessagePackSerializationDemo
                 Username = "mainhundon"
             });
 
-            // Measure serialization and deserialization time
-            Stopwatch sw = new Stopwatch();
+            // Serialization to file
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            using (var file = File.Create(filePath))
+            {
+                MessagePack.MessagePackSerializer.Serialize(file, user);
+            }
+            stopwatch.Stop();
+            long serializationTime = stopwatch.ElapsedMilliseconds;
 
-            sw.Start();
-            byte[] serializedData = MessagePackSerializer.Serialize(user, ContractlessStandardResolver.Options);
-            sw.Stop();
-            long serializationTime = sw.ElapsedMilliseconds;
+            // Deserialization from file
+            stopwatch.Restart();
+            using (var file = File.OpenRead(filePath))
+            {
+                var deserializedUser = MessagePack.MessagePackSerializer.Deserialize<CleanUser3>(file);
+                Console.WriteLine($"Deserialized User Name: {deserializedUser.Name}");
+            }
+            stopwatch.Stop();
+            long deserializationTime = stopwatch.ElapsedMilliseconds;
 
-            sw.Restart();
-            var deserializedUser = MessagePackSerializer.Deserialize<CleanUser3>(serializedData, ContractlessStandardResolver.Options);
-            sw.Stop();
-            long deserializationTime = sw.ElapsedMilliseconds;
+            //// Measure serialization and deserialization time
+            //Stopwatch sw = new Stopwatch();
 
-            // Output analytics
+            //sw.Start();
+            //byte[] serializedData = MessagePackSerializer.Serialize(user, ContractlessStandardResolver.Options);
+            //sw.Stop();
+            //long serializationTime = sw.ElapsedMilliseconds;
+
+            //sw.Restart();
+            //var deserializedUser = MessagePackSerializer.Deserialize<CleanUser3>(serializedData, ContractlessStandardResolver.Options);
+            //sw.Stop();
+            //long deserializationTime = sw.ElapsedMilliseconds;
+
+            //// Output analytics
             Console.WriteLine($"Serialization Time: {serializationTime} ms");
             Console.WriteLine($"Deserialization Time: {deserializationTime} ms");
-            Console.WriteLine($"Deserialized User Name: {deserializedUser.Name}");
 
-            SerializationResult result = new SerializationResult(serializationTime, deserializationTime);
-            return result;
+            //SerializationResult result = new SerializationResult(serializationTime, deserializationTime);
+            //return result;
+            return new SerializationResult(serializationTime, deserializationTime);
         }
     }
 

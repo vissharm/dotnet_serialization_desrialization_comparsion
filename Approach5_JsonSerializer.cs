@@ -7,13 +7,17 @@ using MessagePack.Resolvers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using ConsoleApp1;
+using System.IO;
 
 namespace MessagePackSerializationDemo
 {
     public class Approach5
     {
-        public static SerializationResult RunApproach5()
+        public static SerializationResult RunApproach5(int threadCount)
         {
+            string sourceDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            string filePath = Path.Combine(sourceDirectory,  $"approach5_{threadCount}.txt");
+
             // Create sample data
             var user = new CleanUser5
             {
@@ -74,26 +78,41 @@ namespace MessagePackSerializationDemo
                 Username = "mainhundon"
             });
 
-            // Measure serialization and deserialization time
-            Stopwatch sw = new Stopwatch();
+            // Serialization to file
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            var jsonString = System.Text.Json.JsonSerializer.Serialize(user);
+            File.WriteAllText(filePath, jsonString);
+            stopwatch.Stop();
+            long serializationTime = stopwatch.ElapsedMilliseconds;
 
-            sw.Start();
-            string serializedData = JsonSerializer.Serialize(user);
-            sw.Stop();
-            long serializationTime = sw.ElapsedMilliseconds;
+            // Deserialization from file
+            stopwatch.Restart();
+            jsonString = File.ReadAllText(filePath);
+            var deserializedUser = System.Text.Json.JsonSerializer.Deserialize<CleanUser5>(jsonString);
+            stopwatch.Stop();
+            long deserializationTime = stopwatch.ElapsedMilliseconds;
 
-            sw.Restart();
-            var deserializedObject = JsonSerializer.Deserialize<CleanUser5>(serializedData);
-            sw.Stop();
-            long deserializationTime = sw.ElapsedMilliseconds;
+            //// Measure serialization and deserialization time
+            //Stopwatch sw = new Stopwatch();
 
-            // Output analytics
+            //sw.Start();
+            //string serializedData = JsonSerializer.Serialize(user);
+            //sw.Stop();
+            //long serializationTime = sw.ElapsedMilliseconds;
+
+            //sw.Restart();
+            //var deserializedObject = JsonSerializer.Deserialize<CleanUser5>(serializedData);
+            //sw.Stop();
+            //long deserializationTime = sw.ElapsedMilliseconds;
+
+            //// Output analytics
+            Console.WriteLine($"Deserialized User Name: {deserializedUser.Name}");
             Console.WriteLine($"Serialization Time: {serializationTime} ms");
             Console.WriteLine($"Deserialization Time: {deserializationTime} ms");
-            Console.WriteLine($"Deserialized User Name: {deserializedObject.Name}");
 
-            SerializationResult result = new SerializationResult(serializationTime, deserializationTime);
-            return result;
+            //SerializationResult result = new SerializationResult(serializationTime, deserializationTime);
+            //return result;
+            return new SerializationResult(serializationTime, deserializationTime);
         }
     }
 

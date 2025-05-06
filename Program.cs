@@ -13,7 +13,7 @@ namespace ConsoleApp1
             // Collecting results in a list for tabular display
             var results = new List<SerializationResult>();
 
-            var approaches = new List<Func<SerializationResult>>()
+            var approaches = new List<Func<int, SerializationResult>>()
             {
                 Approach1.RunApproach1,
                 Approach2.RunApproach2,
@@ -47,7 +47,7 @@ namespace ConsoleApp1
                 for (int j = 0; j < 4; j++)
                 {
                     Console.WriteLine($"Run {j + 1}...");
-                    var result = approaches[i]();
+                    var result = approaches[i](j);
                     totalSerializationTime += result.SerializationTime;
                     totalDeserializationTime += result.DeserializationTime;
                 }
