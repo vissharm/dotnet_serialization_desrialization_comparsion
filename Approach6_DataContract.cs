@@ -8,12 +8,13 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.IO;
 using ConsoleApp1;
+using DeepEqual.Syntax;
 
-namespace MessagePackSerializationDemo
+namespace SerializationDeserializationComparsionDemo
 {
     public class Approach6
     {
-        public static SerializationResult RunApproach6(int threadCount)
+        public static void RunApproach6(int threadCount)
         {
             string sourceDirectory = AppDomain.CurrentDomain.BaseDirectory;
             string filePath = Path.Combine(sourceDirectory,  $"approach6_{threadCount}.txt");
@@ -78,23 +79,28 @@ namespace MessagePackSerializationDemo
                 Username = "mainhundon"
             });
 
+            Console.WriteLine("Creating 10 lakh objects list");
+            var userlist = util.CreateReplicatedList<CleanUser6>(user, 1000000);
+            Console.WriteLine("Done creating 10 lakh objects list");
+
             // Serialization to file
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
             using (var file = File.Create(filePath))
             {
-                var serializer = new DataContractSerializer(typeof(CleanUser6));
-                serializer.WriteObject(file, user);
+                var serializer = new DataContractSerializer(typeof(List<CleanUser6>));
+                serializer.WriteObject(file, userlist);
             }
             stopwatch.Stop();
             long serializationTime = stopwatch.ElapsedMilliseconds;
 
             // Deserialization from file
             stopwatch.Restart();
+            List<CleanUser6> deserializedUser;
             using (var file = File.OpenRead(filePath))
             {
-                var serializer = new DataContractSerializer(typeof(CleanUser6));
-                var deserializedUser = (CleanUser6)serializer.ReadObject(file);
-                Console.WriteLine($"Deserialized User Name: {deserializedUser.Name}");
+                var serializer = new DataContractSerializer(typeof(List<CleanUser6>));
+                deserializedUser = (List<CleanUser6>)serializer.ReadObject(file);
+                Console.WriteLine($"Deserialized User Name: {deserializedUser[0].Name}");
             }
             stopwatch.Stop();
             long deserializationTime = stopwatch.ElapsedMilliseconds;
@@ -121,7 +127,12 @@ namespace MessagePackSerializationDemo
 
             //SerializationResult result = new SerializationResult(serializationTime, deserializationTime);
             //return result;
-            return new SerializationResult(serializationTime, deserializationTime);
+            //return new SerializationResult(serializationTime, deserializationTime);
+            // Compare the original and deserialized lists
+            //bool areListsEqual = DeepEqualityChecker.AreListsDeeplyEqual(userlist, deserializedUser);
+            //Console.WriteLine($"Are the original and deserialized lists deeply equal? {areListsEqual}");
+            bool areEqual = userlist.IsDeepEqual(deserializedUser);
+            Console.WriteLine($"Are the lists deeply equal? {areEqual}");
         }
     }
 

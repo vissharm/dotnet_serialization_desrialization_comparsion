@@ -1,33 +1,36 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Runtime.Serialization;
-using ConsoleApp1;
-using DeepEqual.Syntax;
 using MessagePack;
-using Newtonsoft.Json;
+using MessagePack.Resolvers;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.IO;
+using ConsoleApp1;
+using Jil;
+using DeepEqual.Syntax;
 
 namespace SerializationDeserializationComparsionDemo
 {
-    public class Approach1
+    public class Approach9
     {
-        public static void RunApproach1(int threadCount)
+        public static void RunApproach9(int threadCount)
         {
             string sourceDirectory = AppDomain.CurrentDomain.BaseDirectory;
-            string filePath = Path.Combine(sourceDirectory,  $"approach1_{threadCount}.txt");
+            string filePath = Path.Combine(sourceDirectory,  $"approach9_{threadCount}.txt");
 
             // Create sample data
-            var user = new CleanUser
+            var user = new CleanUser9
             {
                 Id = 123,
                 Name = "John Doe",
-                Profile = new Profile
+                Profile = new Profile9
                 {
                     Email = "john@example.com",
                     Phone = "123-456-7890",
                     BirthDate = DateTime.Now,
-                    PrimaryAddress = new Address
+                    PrimaryAddress = new Address9
                     {
                         City = "dummy",
                         Country = "india",
@@ -36,12 +39,12 @@ namespace SerializationDeserializationComparsionDemo
                         ZipCode = "000898"
                     }
                 },
-                Orders = new List<Order>
+                Orders = new List<Order9>
                 {
-                    new Order { OrderId = 1, OrderDate = DateTime.UtcNow, Items = new List<OrderItem>() { }, TotalAmount = 345353 },
-                    new Order { OrderId = 2, OrderDate = DateTime.UtcNow.AddDays(-1), Items = new List<OrderItem>() { }, TotalAmount = 345353 }
+                    new Order9 { OrderId = 1, OrderDate = DateTime.UtcNow, Items = new List<OrderItem9>(), TotalAmount = 345353 },
+                    new Order9 { OrderId = 2, OrderDate = DateTime.UtcNow.AddDays(-1), Items = new List<OrderItem9>(), TotalAmount = 345353 }
                 },
-                Address = new Address
+                Address = new Address9
                 {
                     City = "dummy",
                     Country = "india",
@@ -51,26 +54,26 @@ namespace SerializationDeserializationComparsionDemo
                 },
                 CreatedAt = DateTime.UtcNow,
                 FavoriteNumbers = new List<int> { 1, 2, 3000, 5000, 20 },
-                Preferences = new Dictionary<string, string>() { },
-                SocialLinks = new List<SocialMedia>() { }
+                Preferences = new Dictionary<string, string>(),
+                SocialLinks = new List<SocialMedia9>()
             };
 
             user.Preferences.Add("sdsds", "dfdfdfd");
             user.Preferences.Add("sdegssds", "dfdfdfd");
             user.Preferences.Add("effsfs", "dfdfdfd");
-            user.SocialLinks.Add(new SocialMedia
+            user.SocialLinks.Add(new SocialMedia9
             {
                 Platform = "sdfsdfdsfs",
                 Url = "www.sdfsdf.com",
                 Username = "mainhundon"
             });
-            user.SocialLinks.Add(new SocialMedia
+            user.SocialLinks.Add(new SocialMedia9
             {
                 Platform = "sdfsdfdsfs",
                 Url = "www.sdfsdf.com",
                 Username = "mainhundon"
             });
-            user.SocialLinks.Add(new SocialMedia
+            user.SocialLinks.Add(new SocialMedia9
             {
                 Platform = "sdfsdfdsfs",
                 Url = "www.sdfsdf.com",
@@ -78,41 +81,30 @@ namespace SerializationDeserializationComparsionDemo
             });
 
             Console.WriteLine("Creating 10 lakh objects list");
-            var userlist = util.CreateReplicatedList<CleanUser>(user, 1000000);
+            var userlist = util.CreateReplicatedList<CleanUser9>(user, 1000000);
             Console.WriteLine("Done creating 10 lakh objects list");
 
             // Serialization to file
-            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-            using (var file = File.Create(filePath))
+            var stopwatch = Stopwatch.StartNew();
+            using (var writer = new StreamWriter(filePath))
             {
-                MessagePack.MessagePackSerializer.Serialize(file, userlist);
+                JSON.Serialize(userlist, writer);
             }
             stopwatch.Stop();
             long serializationTime = stopwatch.ElapsedMilliseconds;
 
             // Deserialization from file
             stopwatch.Restart();
-            List<CleanUser> deserializedUser;
-            using (var file = File.OpenRead(filePath))
+            List<CleanUser9> deserializedUser;
+            using (var reader = new StreamReader(filePath))
             {
-                deserializedUser = MessagePack.MessagePackSerializer.Deserialize<List<CleanUser>>(file);
-                Console.WriteLine($"Deserialized User Name: {deserializedUser[0].Name}");
+                deserializedUser = JSON.Deserialize<List<CleanUser9>>(reader);
             }
             stopwatch.Stop();
             long deserializationTime = stopwatch.ElapsedMilliseconds;
 
-            //// Measure serialization and deserialization time
-            //Stopwatch sw = new Stopwatch();
-
-            //sw.Start();
-            //byte[] serializedData = MessagePackSerializer.Serialize(user);
-            //sw.Stop();
-            //long serializationTime = sw.ElapsedMilliseconds;
-
-            //sw.Restart();
-            //var deserializedUser = MessagePackSerializer.Deserialize<CleanUser>(serializedData);
-            //sw.Stop();
-            //long deserializationTime = sw.ElapsedMilliseconds;
+            // Output the deserialized data
+            Console.WriteLine($"Deserialized User Name: {deserializedUser[0].Name}");
 
             // Output analytics
             Console.WriteLine($"Serialization Time: {serializationTime} ms");
@@ -121,219 +113,168 @@ namespace SerializationDeserializationComparsionDemo
             // Compare the original and deserialized lists
             //bool areListsEqual = DeepEqualityChecker.AreListsDeeplyEqual(userlist, deserializedUser);
             //Console.WriteLine($"Are the original and deserialized lists deeply equal? {areListsEqual}");
+            //return new SerializationResult(serializationTime, deserializationTime);
             bool areEqual = userlist.IsDeepEqual(deserializedUser);
             Console.WriteLine($"Are the lists deeply equal? {areEqual}");
-
-            //SerializationResult result = new SerializationResult(serializationTime, deserializationTime);
-            //return result;
-            // return new SerializationResult(serializationTime, deserializationTime);
         }
     }
 
-    //[MessagePackObject]
     //[DataContract]
-    //public class CleanUser1
+    //public class CleanUser6
     //{
-    //    [Key(0)]
     //    [DataMember(Order = 1)]
     //    public int Id { get; set; }
 
-    //    [Key(1)]
     //    [DataMember(Order = 2)]
     //    public string Name { get; set; }
 
-    //    [Key(2)]
-    //    public Profile1 Profile { get; set; }
+    //    public Profile6 Profile { get; set; }
 
-    //    [Key(3)]
     //    [DataMember(Order = 3)]
-    //    public List<Order1> Orders { get; set; }
+    //    public List<Order6> Orders { get; set; }
 
-    //    [IgnoreMember]
-    //    [IgnoreDataMember]
     //    [JsonIgnore] // Ignored during JSON serialization
+    //    [IgnoreDataMember]
     //    public string Secret { get { return "Hello"; } }
     //}
 
-    //[MessagePackObject]
-    //[Serializable]
-    //public class Profile1
+    //[DataContract]
+    //public class Profile6
     //{
-    //    [Key(0)]
+    //    [DataMember(Order = 1)]
     //    public string Email { get; set; }
 
-    //    [Key(1)]
+    //    [DataMember(Order = 2)]
     //    public string Phone { get; set; }
 
-    //    [IgnoreMember]
-    //    [NonSerialized] // Ignored during binary serialization
+    //    [IgnoreDataMember]
     //    private string Secret = "hello";
     //}
 
-    //[MessagePackObject]
-    //[Serializable]
-    //public class Order1
+    //[DataContract]
+    //public class Order6
     //{
-    //    [Key(0)]
     //    [DataMember]
     //    public int OrderId { get; set; }
 
-    //    [Key(1)]
     //    [DataMember]
     //    public DateTime OrderDate { get; set; }
     //}
 
-    [MessagePackObject]
     [DataContract]
-    public class CleanUser
+    public class CleanUser9
     {
-        [Key(0)]
         [DataMember(Order = 1)]
         public int Id { get; set; }
 
-        [Key(1)]
         [DataMember(Order = 2)]
         public string Name { get; set; }
 
-        [Key(2)]
         [DataMember(Order = 3)]
-        public Profile Profile { get; set; }
+        public Profile9 Profile { get; set; }
 
-        [Key(3)]
         [DataMember(Order = 4)]
-        public List<Order> Orders { get; set; }
+        public List<Order9> Orders { get; set; }
 
-        [Key(4)]
         [DataMember(Order = 5)]
-        public Address Address { get; set; }
+        public Address9 Address { get; set; }
 
-        [Key(5)]
         [DataMember(Order = 6)]
         public Dictionary<string, string> Preferences { get; set; }
 
-        [Key(6)]
         [DataMember(Order = 7)]
         public List<int> FavoriteNumbers { get; set; }
 
-        [Key(7)]
         [DataMember(Order = 8)]
         public DateTime CreatedAt { get; set; }
 
-        [Key(8)]
         [DataMember(Order = 9)]
-        public List<SocialMedia> SocialLinks { get; set; }
+        public List<SocialMedia9> SocialLinks { get; set; }
 
-        [IgnoreMember]
+        [JsonIgnore]
         [IgnoreDataMember]
-        [JsonIgnore] // Ignored during JSON serialization
         public string Secret { get { return "This is private"; } }
     }
 
-    [MessagePackObject]
     [DataContract]
-    public class Profile
+    public class Profile9
     {
-        [Key(0)]
         [DataMember(Order = 1)]
         public string Email { get; set; }
 
-        [Key(1)]
         [DataMember(Order = 2)]
         public string Phone { get; set; }
 
-        [Key(2)]
         [DataMember(Order = 3)]
         public DateTime BirthDate { get; set; }
 
-        [Key(3)]
         [DataMember(Order = 4)]
-        public Address PrimaryAddress { get; set; }
+        public Address9 PrimaryAddress { get; set; }
 
-        [IgnoreMember]
-        [NonSerialized] // Ignored during binary serialization
+        [IgnoreDataMember]
         private string InternalNote = "Internal Data";
     }
 
-    [MessagePackObject]
     [DataContract]
-    public class Order
+    public class Order9
     {
-        [Key(0)]
         [DataMember(Order = 1)]
         public int OrderId { get; set; }
 
-        [Key(1)]
         [DataMember(Order = 2)]
         public DateTime OrderDate { get; set; }
 
-        [Key(2)]
         [DataMember(Order = 3)]
         public decimal TotalAmount { get; set; }
 
-        [Key(3)]
         [DataMember(Order = 4)]
-        public List<OrderItem> Items { get; set; }
+        public List<OrderItem9> Items { get; set; }
     }
 
-    [MessagePackObject]
     [DataContract]
-    public class OrderItem
+    public class OrderItem9
     {
-        [Key(0)]
         [DataMember(Order = 1)]
         public int ProductId { get; set; }
 
-        [Key(1)]
         [DataMember(Order = 2)]
         public string ProductName { get; set; }
 
-        [Key(2)]
         [DataMember(Order = 3)]
         public int Quantity { get; set; }
 
-        [Key(3)]
         [DataMember(Order = 4)]
         public decimal Price { get; set; }
     }
 
-    [MessagePackObject]
     [DataContract]
-    public class Address
+    public class Address9
     {
-        [Key(0)]
         [DataMember(Order = 1)]
         public string Street { get; set; }
 
-        [Key(1)]
         [DataMember(Order = 2)]
         public string City { get; set; }
 
-        [Key(2)]
         [DataMember(Order = 3)]
         public string State { get; set; }
 
-        [Key(3)]
         [DataMember(Order = 4)]
         public string ZipCode { get; set; }
 
-        [Key(4)]
         [DataMember(Order = 5)]
         public string Country { get; set; }
     }
 
-    [MessagePackObject]
     [DataContract]
-    public class SocialMedia
+    public class SocialMedia9
     {
-        [Key(0)]
         [DataMember(Order = 1)]
         public string Platform { get; set; }
 
-        [Key(1)]
         [DataMember(Order = 2)]
         public string Url { get; set; }
 
-        [Key(2)]
         [DataMember(Order = 3)]
         public string Username { get; set; }
     }

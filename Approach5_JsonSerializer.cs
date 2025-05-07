@@ -8,12 +8,13 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using ConsoleApp1;
 using System.IO;
+using DeepEqual.Syntax;
 
-namespace MessagePackSerializationDemo
+namespace SerializationDeserializationComparsionDemo
 {
     public class Approach5
     {
-        public static SerializationResult RunApproach5(int threadCount)
+        public static void RunApproach5(int threadCount)
         {
             string sourceDirectory = AppDomain.CurrentDomain.BaseDirectory;
             string filePath = Path.Combine(sourceDirectory,  $"approach5_{threadCount}.txt");
@@ -78,9 +79,13 @@ namespace MessagePackSerializationDemo
                 Username = "mainhundon"
             });
 
+            Console.WriteLine("Creating 10 lakh objects list");
+            var userlist = util.CreateReplicatedList<CleanUser5>(user, 1000000);
+            Console.WriteLine("Done creating 10 lakh objects list");
+
             // Serialization to file
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-            var jsonString = System.Text.Json.JsonSerializer.Serialize(user);
+            var jsonString = System.Text.Json.JsonSerializer.Serialize(userlist);
             File.WriteAllText(filePath, jsonString);
             stopwatch.Stop();
             long serializationTime = stopwatch.ElapsedMilliseconds;
@@ -88,7 +93,7 @@ namespace MessagePackSerializationDemo
             // Deserialization from file
             stopwatch.Restart();
             jsonString = File.ReadAllText(filePath);
-            var deserializedUser = System.Text.Json.JsonSerializer.Deserialize<CleanUser5>(jsonString);
+            var deserializedUser = System.Text.Json.JsonSerializer.Deserialize<List<CleanUser5>>(jsonString);
             stopwatch.Stop();
             long deserializationTime = stopwatch.ElapsedMilliseconds;
 
@@ -106,13 +111,18 @@ namespace MessagePackSerializationDemo
             //long deserializationTime = sw.ElapsedMilliseconds;
 
             //// Output analytics
-            Console.WriteLine($"Deserialized User Name: {deserializedUser.Name}");
+            Console.WriteLine($"Deserialized User Name: {deserializedUser[0].Name}");
             Console.WriteLine($"Serialization Time: {serializationTime} ms");
             Console.WriteLine($"Deserialization Time: {deserializationTime} ms");
 
             //SerializationResult result = new SerializationResult(serializationTime, deserializationTime);
             //return result;
-            return new SerializationResult(serializationTime, deserializationTime);
+            // return new SerializationResult(serializationTime, deserializationTime);
+            // Compare the original and deserialized lists
+            //bool areListsEqual = DeepEqualityChecker.AreListsDeeplyEqual(userlist, deserializedUser);
+            //Console.WriteLine($"Are the original and deserialized lists deeply equal? {areListsEqual}");
+            bool areEqual = userlist.IsDeepEqual(deserializedUser);
+            Console.WriteLine($"Are the lists deeply equal? {areEqual}");
         }
     }
 

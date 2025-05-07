@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using MessagePackSerializationDemo;
+using SerializationDeserializationComparsionDemo;
 
 namespace ConsoleApp1
 {
@@ -13,16 +13,17 @@ namespace ConsoleApp1
             // Collecting results in a list for tabular display
             var results = new List<SerializationResult>();
 
-            var approaches = new List<Func<int, SerializationResult>>()
+            var approaches = new List<Action<int>>()
             {
                 Approach1.RunApproach1,
                 Approach2.RunApproach2,
                 Approach3.RunApproach3,
                 Approach4.RunApproach4,
-                Approach5.RunApproach5,
+                //Approach5.RunApproach5,
                 Approach6.RunApproach6,
-                Approach7.RunApproach7,
-                Approach8.RunApproach8
+                //Approach7.RunApproach7,
+                Approach8.RunApproach8,
+                Approach9.RunApproach9
             };
 
             var approachNames = new List<string>
@@ -31,35 +32,37 @@ namespace ConsoleApp1
                 "Approach 2 (Optimized MessagePack)",
                 "Approach 3 (No MessagePack annotation)",
                 "Approach 4 (Binary Formatter)",
-                "Approach 5 (System.Text.Json)",
+                //"Approach 5 (System.Text.Json)",
                 "Approach 6 (DataContract)",
-                "Approach 7 (Newtonsoft.Json)",
-                "Approach 8 (Ceras)"
+                //"Approach 7 (Newtonsoft.Json)",
+                "Approach 8 (Ceras)",
+                "Approach 9 (Jil)"
             };
 
             for (int i = 0; i < approaches.Count; i++)
             {
                 Console.WriteLine($"\nExecuting {approachNames[i]}...");
 
-                long totalSerializationTime = 0;
-                long totalDeserializationTime = 0;
+                //long totalSerializationTime = 0;
+                //long totalDeserializationTime = 0;
 
-                for (int j = 0; j < 4; j++)
+                for (int j = 0; j < 1; j++)
                 {
                     Console.WriteLine($"Run {j + 1}...");
-                    var result = approaches[i](j);
-                    totalSerializationTime += result.SerializationTime;
-                    totalDeserializationTime += result.DeserializationTime;
+                    // var result = approaches[i](j);
+                    approaches[i](j);
+                    //totalSerializationTime += result.SerializationTime;
+                    //totalDeserializationTime += result.DeserializationTime;
                 }
 
-                long avgSerializationTime = totalSerializationTime / 4;
-                long avgDeserializationTime = totalDeserializationTime / 4;
+                //long avgSerializationTime = totalSerializationTime / 4;
+                //long avgDeserializationTime = totalDeserializationTime / 4;
 
-                results.Add(new SerializationResult(approachNames[i], avgSerializationTime, avgDeserializationTime));
+                // results.Add(new SerializationResult(approachNames[i], avgSerializationTime, avgDeserializationTime));
             }
 
             // Display the results in a table format
-            PrintResultsTable(results);
+            // PrintResultsTable(results);
 
             Console.WriteLine("\nAnalytics Complete!");
         }

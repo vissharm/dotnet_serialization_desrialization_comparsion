@@ -4,15 +4,16 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.Serialization;
 using ConsoleApp1;
+using DeepEqual.Syntax;
 using MessagePack;
 using MessagePack.Resolvers;
 using Newtonsoft.Json;
 
-namespace MessagePackSerializationDemo
+namespace SerializationDeserializationComparsionDemo
 {
     public class Approach3
     {
-        public static SerializationResult RunApproach3(int threadCount)
+        public static void RunApproach3(int threadCount)
         {
             string sourceDirectory = AppDomain.CurrentDomain.BaseDirectory;
             string filePath = Path.Combine(sourceDirectory,  $"approach3_{threadCount}.txt");
@@ -77,21 +78,26 @@ namespace MessagePackSerializationDemo
                 Username = "mainhundon"
             });
 
+            Console.WriteLine("Creating 10 lakh objects list");
+            var userlist = util.CreateReplicatedList<CleanUser3>(user, 1000000);
+            Console.WriteLine("Done creating 10 lakh objects list");
+
             // Serialization to file
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
             using (var file = File.Create(filePath))
             {
-                MessagePack.MessagePackSerializer.Serialize(file, user);
+                MessagePack.MessagePackSerializer.Serialize(file, userlist);
             }
             stopwatch.Stop();
             long serializationTime = stopwatch.ElapsedMilliseconds;
 
             // Deserialization from file
             stopwatch.Restart();
+            List<CleanUser3> deserializedUser;
             using (var file = File.OpenRead(filePath))
             {
-                var deserializedUser = MessagePack.MessagePackSerializer.Deserialize<CleanUser3>(file);
-                Console.WriteLine($"Deserialized User Name: {deserializedUser.Name}");
+                deserializedUser = MessagePack.MessagePackSerializer.Deserialize<List<CleanUser3>>(file);
+                Console.WriteLine($"Deserialized User Name: {deserializedUser[0].Name}");
             }
             stopwatch.Stop();
             long deserializationTime = stopwatch.ElapsedMilliseconds;
@@ -113,9 +119,14 @@ namespace MessagePackSerializationDemo
             Console.WriteLine($"Serialization Time: {serializationTime} ms");
             Console.WriteLine($"Deserialization Time: {deserializationTime} ms");
 
+            // Compare the original and deserialized lists
+            //bool areListsEqual = DeepEqualityChecker.AreListsDeeplyEqual(userlist, deserializedUser);
+            //Console.WriteLine($"Are the original and deserialized lists deeply equal? {areListsEqual}");
+            bool areEqual = userlist.IsDeepEqual(deserializedUser);
+            Console.WriteLine($"Are the lists deeply equal? {areEqual}");
             //SerializationResult result = new SerializationResult(serializationTime, deserializationTime);
             //return result;
-            return new SerializationResult(serializationTime, deserializationTime);
+            //return new SerializationResult(serializationTime, deserializationTime);
         }
     }
 
