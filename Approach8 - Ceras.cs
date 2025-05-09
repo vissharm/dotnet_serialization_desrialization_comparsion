@@ -85,16 +85,25 @@ namespace SerializationDeserializationComparsionDemo
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
             var config = new SerializerConfig();
             config.PreserveReferences = true;
+            config.DefaultTargets = TargetMember.AllPublic;
             var ceras = new Ceras.CerasSerializer(config);
-            var serializedData = ceras.Serialize(userlist);
-            File.WriteAllBytes(filePath, serializedData);
+            // var serializedData = ceras.Serialize(userlist);
+
+            // Byte array for serialization
+            byte[] buffer = null;
+            // Serialize the object into the byte array
+            ceras.Serialize(userlist, ref buffer);
+
+
+            File.WriteAllBytes(filePath, buffer);
             stopwatch.Stop();
             long serializationTime = stopwatch.ElapsedMilliseconds;
 
             // Deserialization from file
             stopwatch.Restart();
             var serializedBytes = File.ReadAllBytes(filePath);
-            var deserializedUser = ceras.Deserialize<List<CleanUser8>>(serializedBytes);
+            List<CleanUser8> deserializedUser = null;
+            ceras.Deserialize<List<CleanUser8>>(ref deserializedUser, serializedBytes);
             stopwatch.Stop();
             long deserializationTime = stopwatch.ElapsedMilliseconds;
 
@@ -113,7 +122,7 @@ namespace SerializationDeserializationComparsionDemo
             //long deserializationTime = sw.ElapsedMilliseconds;
 
             //// Output analytics
-            Console.WriteLine($"Deserialized User Name: {deserializedUser[0].Name}");
+            Console.WriteLine($"Deserialized User Name: {deserializedUser[0].Name} | {deserializedUser.Count}");
             Console.WriteLine($"Serialization Time: {serializationTime} ms");
             Console.WriteLine($"Deserialization Time: {deserializationTime} ms");
 
