@@ -10,7 +10,11 @@ namespace ConsoleApp1
         {
             Console.WriteLine("Starting MessagePack Serialization and Deserialization Analytics...\n");
 
-            // Collecting results in a list for tabular display
+        // Collecting results in a list for tabular display
+        // memorypack - need to tag [MemoryPackable(GenerateType.CircularReference)] on each model containing refence
+
+        // ceras was written as message pack do not provide circular reference support
+        // https://github.com/MessagePack-CSharp/MessagePack-CSharp/issues/57
             var results = new List<SerializationResult>();
 
             var approaches = new List<Action<int>>()
@@ -19,9 +23,9 @@ namespace ConsoleApp1
                 Approach2.RunApproach2,
                 Approach3.RunApproach3,
                 Approach4.RunApproach4,
-                //Approach5.RunApproach5,
+                Approach5.RunApproach5,
                 Approach6.RunApproach6,
-                //Approach7.RunApproach7,
+                Approach7.RunApproach7,
                 Approach8.RunApproach8,
                 Approach9.RunApproach9
             };
@@ -32,9 +36,9 @@ namespace ConsoleApp1
                 "Approach 2 (Optimized MessagePack)",
                 "Approach 3 (No MessagePack annotation)",
                 "Approach 4 (Binary Formatter)",
-                //"Approach 5 (System.Text.Json)",
+                "Approach 5 (System.Text.Json)",
                 "Approach 6 (DataContract)",
-                //"Approach 7 (Newtonsoft.Json)",
+                "Approach 7 (Newtonsoft.Json)",
                 "Approach 8 (Ceras)",
                 "Approach 9 (Jil)"
             };
@@ -50,7 +54,14 @@ namespace ConsoleApp1
                 {
                     Console.WriteLine($"Run {j + 1}...");
                     // var result = approaches[i](j);
-                    approaches[i](j);
+                    try
+                    {
+                        approaches[i](j);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.ToString());
+                    }
                     //totalSerializationTime += result.SerializationTime;
                     //totalDeserializationTime += result.DeserializationTime;
                 }

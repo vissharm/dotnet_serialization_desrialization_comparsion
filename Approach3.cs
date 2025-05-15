@@ -79,7 +79,7 @@ namespace SerializationDeserializationComparsionDemo
             });
 
             Console.WriteLine("Creating 10 lakh objects list");
-            var userlist = util.CreateReplicatedList<CleanUser3>(user, 1000000);
+            var userlist = util.CreateReplicatedList<CleanUser3>(user, 500000);
             Console.WriteLine("Done creating 10 lakh objects list");
 
             // Serialization to file

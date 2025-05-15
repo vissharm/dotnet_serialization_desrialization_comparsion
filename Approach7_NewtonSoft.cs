@@ -81,12 +81,15 @@ namespace SerializationDeserializationComparsionDemo
             });
 
             Console.WriteLine("Creating 10 lakh objects list");
-            var userlist = util.CreateReplicatedList<CleanUser7>(user, 1000000);
+            var userlist = util.CreateReplicatedList<CleanUser7>(user, 500000);
             Console.WriteLine("Done creating 10 lakh objects list");
 
             // Serialization to file
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-            var jsonString = Newtonsoft.Json.JsonConvert.SerializeObject(userlist);
+            var jsonString = Newtonsoft.Json.JsonConvert.SerializeObject(userlist, new JsonSerializerSettings
+            {
+                ReferenceLoopHandling = ReferenceLoopHandling.Serialize
+            });
             File.WriteAllText(filePath, jsonString);
             stopwatch.Stop();
             long serializationTime = stopwatch.ElapsedMilliseconds;
@@ -94,7 +97,10 @@ namespace SerializationDeserializationComparsionDemo
             // Deserialization from file
             stopwatch.Restart();
             jsonString = File.ReadAllText(filePath);
-            var deserializedUser = Newtonsoft.Json.JsonConvert.DeserializeObject<List<CleanUser7>>(jsonString);
+            var deserializedUser = Newtonsoft.Json.JsonConvert.DeserializeObject<List<CleanUser7>>(jsonString, new JsonSerializerSettings
+            {
+                ReferenceLoopHandling = ReferenceLoopHandling.Serialize
+            });
             stopwatch.Stop();
             long deserializationTime = stopwatch.ElapsedMilliseconds;
 

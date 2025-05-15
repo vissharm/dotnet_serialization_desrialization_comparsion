@@ -10,6 +10,7 @@ using System.IO;
 using ConsoleApp1;
 using Jil;
 using DeepEqual.Syntax;
+using Ceras;
 
 namespace SerializationDeserializationComparsionDemo
 {
@@ -81,11 +82,20 @@ namespace SerializationDeserializationComparsionDemo
             });
 
             Console.WriteLine("Creating 10 lakh objects list");
-            var userlist = util.CreateReplicatedList<CleanUser9>(user, 1000000);
+            var userlist = util.CreateReplicatedList<CleanUser9>(user, 500000);
             Console.WriteLine("Done creating 10 lakh objects list");
 
             // Serialization to file
+            // No circular reference support
+            // only public properties not fields
             var stopwatch = Stopwatch.StartNew();
+            var options = new Options(
+                 prettyPrint: false,
+                 excludeNulls: false,
+                 includeInherited: true,
+                 serializationNameFormat: SerializationNameFormat.CamelCase,
+                 dateFormat: Jil.DateTimeFormat.ISO8601
+             );
             using (var writer = new StreamWriter(filePath))
             {
                 JSON.Serialize(userlist, writer);
